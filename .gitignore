@@ -1,3 +1,6 @@
+# IDE
+.vscode/
+
 # Python-generated files
 __pycache__/
 *.py[oc]
@@ -8,3 +11,7 @@ wheels/
 
 # Virtual environments
 .venv
+
+# Testing Files
+test_archives/
+test_output/
