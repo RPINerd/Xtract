@@ -2,10 +2,10 @@ r"""
 Extracts files from Egosoft's X4 Foundations cat files.
 
 Usage:
-python unpack.py <source_directory> <destination_directory> [-i <include_files>] [-f <filter_regex>]
+python unpack.py <source_directory> <destination_directory> [-i <include_files>] [-t <file_types>] [-v]
 
 Example:
-python unpack.py /home/rpinerd/.local/share/steam/steamapps/common/X4\ Foundations . -f "^.*(xml|html|js)$"
+python unpack.py /mnt/data_drive/steam_library/common/X4\ Foundations . -t html,js,css -i 01.cat 03.cat
 """
 
 import argparse
