@@ -1,12 +1,4 @@
-r"""
-Extracts files from Egosoft's X4 Foundations cat files.
-
-Usage:
-python unpack.py <source_directory> <destination_directory> [-i <include_files>] [-t <file_types>] [-v]
-
-Example:
-python unpack.py /mnt/data_drive/steam_library/common/X4\ Foundations . -t html,js,css -i 01.cat 03.cat
-"""
+"""Extracts files from Egosoft's X4 Foundations cat files."""
 
 import argparse
 import logging
