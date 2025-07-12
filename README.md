@@ -29,6 +29,7 @@ python xtract.py <source_directory> <destination_directory> [options]
 
 - `-i`, `--include`: List of specific `.cat` files to extract (default: all found)
 - `-t`, `--types`: Comma-separated list of file extensions to extract (default: xml, xsd, html, js, css, lua)
+- `-e`, `--expansions`: Auto-detect and extract official expansions
 - `-v`, `--verbose`: Enable verbose logging for debugging
 
 ### Example
@@ -42,7 +43,7 @@ python xtract.py \
   -t xml,html,js
 ```
 
-Extract only specific cat files:
+Extract only *.xml files from cat file 01 and 02:
 
 ```bash
 python xtract.py /path/to/cats /output -i 01.cat 02.cat -t xml
