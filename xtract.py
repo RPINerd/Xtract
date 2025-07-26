@@ -2,9 +2,16 @@
 
 import argparse
 import logging
+import sys
+from datetime import datetime
 from pathlib import Path
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    filemode="w",
+    filename=f"xtract_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
+)
 logger = logging.getLogger(__name__)
 
 EXPANSIONS = {
@@ -54,13 +61,13 @@ def parse_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def ex_cat(cat_file: Path, output: Path, extensions: list[str]) -> None:
+def extract_cat(cat_file: Path, output: Path, extensions: list[str]) -> None:
     """
     Extracts files from a cat file.
 
     Args:
         cat_file (Path): The path to the cat file.
-        output (Path): The directory where extracted files will be saved.
+        output (Path): The base directory where extracted files will be saved.
         extensions (list): List of file extensions to filter files for extraction.
 
     Raises:
@@ -78,9 +85,7 @@ def ex_cat(cat_file: Path, output: Path, extensions: list[str]) -> None:
         return
 
     with Path.open(cat_file) as c_file, Path.open(dat_file, 'rb') as d_file:
-        for i, line in enumerate(c_file):
-            # logger.debug(f"Processing line: {line.strip()}")
-
+        for i, line in enumerate(c_file, start=1):
             if i % 10000 == 0:
                 logger.info(f"Processed {i} lines...")
 
@@ -109,9 +114,9 @@ def ex_cat(cat_file: Path, output: Path, extensions: list[str]) -> None:
     logger.debug(f"Files of types {', '.join(extensions)} extracted from {cat_file} to {output}")
 
 
-def process_directory(source_dir: Path, output: Path, extensions: list[str], include: list[str]) -> None:
+def collect_files(source_dir: Path, include: list[str]) -> list[Path]:
     """
-    Process a directory of cat files.
+    Process a directory and return a list of cat files.
 
     Args:
         source_dir (Path): The directory containing the cat files.
@@ -134,11 +139,16 @@ def process_directory(source_dir: Path, output: Path, extensions: list[str], inc
         extract_files = all_files
 
     logger.info(f"{len(extract_files)} cat files found for extraction...")
-    for file in extract_files:
-        ex_cat(file, output, extensions)
+    return extract_files
 
 
-def main(args: argparse.Namespace) -> None:
+def main(
+    foundation_dir: Path,
+    target_dir: Path,
+    expansions: bool,
+    file_types: list[str],
+    files_specified: list[str],
+    mods: bool = False) -> None:
     """
     Main function to orchestrate the extraction of files from cat files.
 
@@ -153,26 +163,13 @@ def main(args: argparse.Namespace) -> None:
         FileNotFoundError: If the source directory does not exist.
         FileNotFoundError: If no cat files are found in the source directory.
     """
-    if args.verbose:
-        logger.setLevel(logging.DEBUG)
-
-    target_dir = Path(args.destdir).resolve()
-    if not target_dir.exists():
-        Path.mkdir(target_dir, parents=True)
-
-    file_types = args.types.split(",")
-    if not file_types:
-        raise ValueError("No file types specified for extraction!")
-
-    foundation_dir = Path(args.sourcedir).resolve()
-    if not foundation_dir.exists():
-        raise FileNotFoundError(f"Source directory {foundation_dir} does not exist!")
+    extraction_targets: dict[str, list[Path]] = {}
 
     logger.info(f"Extracting core files from {foundation_dir}...")
     logger.debug(f"(Extracting types: {', '.join(file_types)})")
-    process_directory(foundation_dir, target_dir, file_types, args.include)
+    extraction_targets["base"] = collect_files(foundation_dir, files_specified)
 
-    if args.expansions:
+    if expansions:
         logger.info("Checking for expansions...")
         # Find all expansion folders in foundation_dir/extensions that start with 'ego_dlc_'
         extensions_dir = foundation_dir / "extensions"
@@ -192,9 +189,51 @@ def main(args: argparse.Namespace) -> None:
             expansion_target_dir = target_dir / expansion.name
             if not expansion_target_dir.exists():
                 Path.mkdir(expansion_target_dir, parents=True)
-            process_directory(expansion, expansion_target_dir, file_types, [])
+            extraction_targets[expansion.name] = collect_files(expansion, files_specified)
+
+    if mods:
+        # TODO: Implement mod extraction logic
+        logger.warning("Mod extraction is not implemented yet.")
+        pass
+
+    for target, files in extraction_targets.items():
+        if target == "base":
+            output_dir = target_dir
+        else:
+            output_dir = target_dir / target
+        for file in files:
+            extract_cat(file, output_dir, file_types)
 
 
 if __name__ == "__main__":
     args = parse_arguments()
-    main(args)
+
+    if args.verbose:
+        logger.setLevel(logging.DEBUG)
+
+    foundation_dir = Path(args.sourcedir).resolve()
+    if not foundation_dir.exists():
+        logger.error(f"Source directory {foundation_dir} does not exist!")
+        sys.exit(1)
+
+    file_types: list[str] = args.types.split(",")
+    if not file_types:
+        logger.error("File type flag provided without any extensions!")
+        sys.exit(1)
+
+    target_dir = Path(args.destdir).resolve()
+    if not target_dir.exists():
+        logger.debug(f"Creating target directory {target_dir}...")
+        Path.mkdir(target_dir, parents=True)
+
+    files_specified: list[str] = []
+    for file in args.include:
+        if file.endswith(".cat"):
+            files_specified.append(file)
+        else:
+            logger.warning(f"File {file} does not appear to be a *.cat file, ignoring it.")
+    if not files_specified:
+        logger.info("No specific files provided for extraction, extracting all cat files found.")
+        files_specified = []
+
+    main(foundation_dir, target_dir, args.expansions, file_types, files_specified)
