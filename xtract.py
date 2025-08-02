@@ -3,8 +3,12 @@
 import argparse
 import logging
 import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
+
+from rich.console import Console
+from rich.progress import BarColumn, Progress, SpinnerColumn, TextColumn
 
 logging.basicConfig(
     level=logging.INFO,
@@ -13,6 +17,7 @@ logging.basicConfig(
     filename=f"xtract_{datetime.now().strftime('%Y%m%d_%H%M%S')}.log"
 )
 logger = logging.getLogger(__name__)
+console = Console()
 
 EXPANSIONS = {
     "ego_dlc_boron": "Kingdoms End",
@@ -142,6 +147,32 @@ def collect_files(source_dir: Path, include: list[str]) -> list[Path]:
     return extract_files
 
 
+def extraction_job(target: str, files: list[Path], output_dir: Path, extensions: list[str]) -> None:
+    """
+    Extract all files for a given target (base or expansion).
+
+    Args:
+        target (str): The name of the extraction target.
+        files (list[Path]): List of cat files to extract.
+        output_dir (Path): Directory to extract files into.
+        extensions (list[str]): List of file extensions to extract.
+    """
+    with Progress(
+        SpinnerColumn(),
+        TextColumn(f"[progress.description]{EXPANSIONS.get(target, "Base Game"):{" "}<20} "),
+        BarColumn(bar_width=None),
+        TextColumn("[progress.percentage]{task.percentage:>3.1f}%  "),
+        console=console,
+    ) as progress:
+        task_id = progress.add_task(f"{EXPANSIONS.get(target, "Base Game")}", total=len(files))
+        for cat_file in files:
+            try:
+                extract_cat(cat_file, output_dir, extensions)
+            except Exception as e:
+                logger.error(f"Error extracting {cat_file}: {e}")
+            progress.update(task_id, description=f"{cat_file.name}..", advance=1)
+
+
 def main(
     foundation_dir: Path,
     target_dir: Path,
@@ -196,13 +227,27 @@ def main(
         logger.warning("Mod extraction is not implemented yet.")
         pass
 
-    for target, files in extraction_targets.items():
-        if target == "base":
-            output_dir = target_dir
-        else:
-            output_dir = target_dir / target
-        for file in files:
-            extract_cat(file, output_dir, file_types)
+    # Prepare extraction jobs for parallel execution
+    with ThreadPoolExecutor() as executor:
+        futures = []
+        for target, files in extraction_targets.items():
+            logger.debug(f"Target {target} has {len(files)} files to extract.")
+            output_dir = target_dir if target == "base" else target_dir / target
+            futures.append(
+                executor.submit(
+                    extraction_job,
+                    target,
+                    files,
+                    output_dir,
+                    file_types,
+                )
+            )
+        # Wait for all jobs to complete
+        for future in as_completed(futures):
+            try:
+                future.result()
+            except Exception as e:
+                logger.error(f"Extraction job failed: {e}")
 
 
 if __name__ == "__main__":
