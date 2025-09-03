@@ -100,7 +100,7 @@ def extract_cat(cat_file: Path, output: Path, extensions: list[str]) -> None:
             size = int(fields[-3])
             file_parent = filepath.parent
 
-            if filepath.suffix[1:] not in extensions:
+            if filepath.suffix[1:] not in extensions and extensions != ['*']:
                 d_file.read(size)
                 continue
 
