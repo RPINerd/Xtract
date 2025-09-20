@@ -1,0 +1,72 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [1.1.0] - 2025-09-20
+
+### Added
+
+- Support for the recent Envoy expansion
+- Ability to pass "*" for extraction of everything in `cat` files
+
+### Changed
+
+- Implemented some extra logic for checking target directory
+
+---
+
+## [1.0.0] - 2025-08-02
+
+### Added
+
+- Implemented parallel extraction
+- Terminal graphical progress
+
+---
+
+## [0.5.0] - 2025-07-26
+
+### Added
+
+- New logic for upcoming parallel processing
+- Automatic detection for expansions
+
+---
+
+## [DEV] - 2025-06-09
+
+### Added
+
+- Initial project setup. Mostly a clone of the existing extraction code with minimal modern python updates.
+
+### Changed
+
+- N/A
+
+### Deprecated
+
+- N/A
+
+### Removed
+
+- N/A
+
+### Fixed
+
+- N/A
+
+### Security
+
+- N/A
+
+---
+
+<!--
+How to use this changelog:
+- Add new changes under the [Unreleased] section.
+- When releasing a new version, move changes from [Unreleased] to a new version section.
+- Use the following categories: Added, Changed, Deprecated, Removed, Fixed, Security.
+-->

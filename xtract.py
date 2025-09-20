@@ -27,7 +27,7 @@ EXPANSIONS = {
     "ego_dlc_timelines": "Timelines",
     "ego_dlc_ventures": "Ventures",
     "ego_dlc_mini_01": "Hyperion",
-    "ego_dlc_mini_02": "...",
+    "ego_dlc_mini_02": "Envoy",
     "ego_dlc_mini_03": "...",
 }
 
@@ -216,7 +216,7 @@ def main(
             return
 
         for expansion in official_expansions:
-            logger.info(f"Extracting files from expansion {EXPANSIONS[expansion.name]}...")
+            logger.info(f"Extracting files from the {EXPANSIONS[expansion.name]} expansion...")
             expansion_target_dir = target_dir / expansion.name
             if not expansion_target_dir.exists():
                 Path.mkdir(expansion_target_dir, parents=True)
@@ -267,7 +267,16 @@ if __name__ == "__main__":
         sys.exit(1)
 
     target_dir = Path(args.destdir).resolve()
-    if not target_dir.exists():
+    if target_dir.exists():
+        if not target_dir.is_dir():
+            logger.error(f"Target path {target_dir} exists but is not a directory!")
+            sys.exit(1)
+        else:
+            logger.debug(f"Target directory {target_dir} exists. Files will be overwritten!")
+            logger.warning(f"""Target directory {target_dir} exists.
+                Most files should overwrite, but if you want a clean extraction please delete or move this directory first!"""
+                )
+    else:
         logger.debug(f"Creating target directory {target_dir}...")
         Path.mkdir(target_dir, parents=True)
 

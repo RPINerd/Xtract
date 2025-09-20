@@ -12,7 +12,7 @@ Xtract is a Python script for extracting files from Egosoft's X4 Foundations `.c
 ## Requirements
 
 - Python 3.8+
-- No external dependencies (uses only Python standard library)
+- Rich 14.1+
 
 ## Usage
 
@@ -32,15 +32,12 @@ python xtract.py <source_directory> <destination_directory> [options]
 - `-e`, `--expansions`: Auto-detect and extract official expansions
 - `-v`, `--verbose`: Enable verbose logging for debugging
 
-### Example
+### Examples
 
 Extract all XML, HTML, and JS files from a Steam install:
 
 ```bash
-python xtract.py \
-  /home/username/.local/share/steam/steamapps/common/X4\ Foundations \
-  ./output \
-  -t xml,html,js
+python xtract.py /home/username/.local/share/steam/steamapps/common/X4\ Foundations /output -t xml,html,js
 ```
 
 Extract only *.xml files from cat file 01 and 02:
